@@ -1,53 +1,34 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Arrays;
+
 
 public class AlbumDatabase {
 
-    // public static Duration[] getDurations() {
 
-    // }
-
-    public static void main(String[] args) throws FileNotFoundException {
-
-        Scanner albumsFile = new Scanner(new File("./albums.txt"));
+    public static void main(String[] args) {
 
         AlbumCollection albumCollection = new AlbumCollection();
+        if (!albumCollection.loadFromFile("./albums.txt")) { System.out.println("Error happened bye bye :( "); return; }
 
-        Album currentAlbum = null;
+        albumCollection.sort(Album.Artist);
 
+        System.out.println("\n\nAll albums sorted by artists name: \n" + albumCollection);
 
-        while (albumsFile.hasNextLine()) {
-            String data = albumsFile.nextLine();
-             
-            Matcher matcher = Pattern.compile("(?:[0-9]{1,2}):(?:[0-5][0-9]):(?:[0-5][0-9])").matcher(data);
+        AlbumCollection kraftwerk = albumCollection.getAlbumsByIdentifier("Kraftwerk");
 
-            if (matcher.find()) {
-                assert currentAlbum != null: "Object should not be null";
-                Track track = new Track(data.split(" - ")[1], matcher.group());
-                currentAlbum.appendTrack(track);
-            } else {
-                Matcher year = Pattern.compile("\\(\\d{4}\\)").matcher(data.split(" : ")[1]);
-                if (year.find()) {
-                    if (currentAlbum != null) { albumCollection.appendAlbum(currentAlbum);}
+        System.out.println("kraftwerk's albums total duration: " + kraftwerk.getTotalDuration() + "\n");
 
-                    currentAlbum = new Album(
-                        data.split(" : ")[0],
-                        data.split(" : ")[1].substring(0, year.start()) + data.split(" : ")[1].substring(year.end()),
-                        Integer.parseInt(year.group().split("\\(")[1].split("\\)")[0])
-                    );
-                }
+        albumCollection.sort(Album.AlbumNameLength, true);
 
-            }
-        }
-        System.out.println(albumCollection.getAlbums()[1].getArtist());
+        System.out.println("Shortest album name: " + albumCollection.getAlbums()[0] + "\n");
 
+        Track[] longestTracks = Arrays.stream(albumCollection.getAlbums()).map(x -> {
+            x.sort(Track.TrackDuration, true);
+            return x.getTracks()[0];
+        }).toArray(Track[]::new);
+        
+        Track longestTrack = new Album(null, null, 0, longestTracks) {{ sort(Track.TrackDuration, true); }}.getTracks()[0]; 
 
-
-        albumsFile.close();
+        System.out.println("Longest track duration: " + longestTrack);
 
     }
 }
