@@ -1,15 +1,18 @@
 import java.util.Arrays;
-
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class AlbumDatabase {
-
 
     public static void main(String[] args) {
 
         AlbumCollection albumCollection = new AlbumCollection();
-        if (!albumCollection.loadFromFile("./albums.txt")) { System.out.println("Error happened bye bye :( "); return; }
+        if (!albumCollection.loadFromFile("./albums.txt")) {
+            System.out.println("Error happened bye bye :( ");
+            return;
+        }
 
-        albumCollection.sort(Album.Artist);
+        albumCollection.sort(Album.ARTIST);
 
         System.out.println("\n\nAll albums sorted by artists name: \n" + albumCollection);
 
@@ -17,16 +20,18 @@ public class AlbumDatabase {
 
         System.out.println("kraftwerk's albums total duration: " + kraftwerk.getTotalDuration() + "\n");
 
-        albumCollection.sort(Album.AlbumNameLength, true);
+        albumCollection.sort(Album.ALBUM_NAME_LENGTH, true);
 
-        System.out.println("Shortest album name: " + albumCollection.getAlbums()[0] + "\n");
+        System.out.println("Shortest album name: " + albumCollection.getAlbums().get(0) + "\n");
 
-        Track[] longestTracks = Arrays.stream(albumCollection.getAlbums()).map(x -> {
-            x.sort(Track.TrackDuration, true);
-            return x.getTracks()[0];
-        }).toArray(Track[]::new);
-        
-        Track longestTrack = new Album(null, null, 0, longestTracks) {{ sort(Track.TrackDuration, true); }}.getTracks()[0]; 
+        Track longestTrack = new Album(null, null, 0, albumCollection.getAlbums().stream().map(x -> {
+            x.sort(Track.TRACK_DURATION, true);
+            return x.getTracks().get(0);
+        }).collect(Collectors.toList())) {
+            {
+                sort(Track.TRACK_DURATION, true);
+            }
+        }.getTracks().get(0);
 
         System.out.println("Longest track duration: " + longestTrack);
 

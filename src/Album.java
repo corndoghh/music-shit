@@ -1,39 +1,30 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class Album {
 
     private final String artist;
     private final String albumName;
     private final int year;
-    private Track[] tracks;
+    private List<Track> tracks;
 
-    public Album(String artist, String albumName, int year, Track[] tracks) {
+
+    public Album(String artist, String albumName, int year, List<Track> tracks) {
         this.artist = artist;
-        this.albumName = albumName;
+        this.albumName = albumName != null ? albumName.stripTrailing() : null;
         this.year = year;
-        this.tracks = tracks;
+        this.tracks = new ArrayList<>(tracks);
     }
 
     public Album(String artist, String albumName, int year) {
-        this.artist = artist;
-        this.albumName = albumName.replaceFirst("\\s++$", "");
-        ;
-        this.year = year;
-        this.tracks = new Track[] {};
+        this(artist, albumName, year, new ArrayList<>());
     }
 
-    public void appendTrack(Track track) {
-        Track[] newTracks = Arrays.copyOf(tracks, tracks.length + 1);
-        newTracks[tracks.length] = track;
-        tracks = newTracks;
-    }
+    public void appendTrack(Track track) { tracks.add(track); }
 
-    public Track[] getTracks() {
-        return tracks;
-    }
+    public List<Track> getTracks() { return tracks; }
 
     public String getArtist() {
         return this.artist;
@@ -48,13 +39,10 @@ public class Album {
     }
 
     public Duration getAlbumDuration() {
-        return Arrays.stream(tracks)
+        return tracks.stream()
                 .map(x -> (Duration) x)
                 .reduce(
-                        new Duration(new int[] { 0, 0, 0 }), (x, i) -> {
-                            x.addDuration(i);
-                            return x;
-                        });
+                        new Duration(new int[] { 0, 0, 0 }), (x,i) -> { x.add(i); return x; });
         // Duration totalDuration = new Duration(new int[]{0,0,0});
         // Arrays.stream(tracks).forEach(x -> { totalDuration.addDuration(x); });
         // int[] totalDuration2 = Arrays.stream(tracks).map(Track::toInt).reduce(
@@ -80,7 +68,7 @@ public class Album {
 
     // Track sorting
     public void sort() {
-        sort(Track.TrackDuration, false);
+        sort(Track.TRACK_DURATION, false);
     }
 
     public void sort(Comparator<Track> comparator) {
@@ -88,70 +76,85 @@ public class Album {
     }
 
     public void sort(Comparator<Track> comparator, Boolean reversed) {
-        ArrayList<Track> sorted = new ArrayList<>(Arrays.asList(this.tracks));
-        Collections.sort(sorted, comparator);
-        if (reversed) {
-            Collections.reverse(sorted);
-        }
-        tracks = sorted.toArray(Track[]::new);
+        tracks.sort(comparator);
+        if (reversed) { Collections.reverse(tracks); }
     }
 
     // Sorting ways
 
     // ====== Artist name sorting ======
+    
+    public static final Comparator<Album> ARTIST = Comparator
+    .comparing(Album::getArtist)
+    .thenComparingInt(Album::getYear);
 
-    public static final Comparator<Album> Artist = new Comparator<Album>() {
-        @Override
-        public int compare(Album a1, Album a2) {
-            if (a1.artist.equals(a2.artist)) {
-                return Integer.compare(a1.year, a2.year);
-            }
-            return a1.artist.compareTo(a2.artist);
-        }
-    };
+    public static final Comparator<Album> ARTIST_LENGTH = Comparator
+    .comparingInt(album -> album.getArtist().length());
 
-    public static final Comparator<Album> ArtistLength = new Comparator<Album>() {
-        @Override
-        public int compare(Album a1, Album a2) {
-            return Integer.compare(a1.artist.length(), a2.artist.length());
-        }
-    };
+    public static final Comparator<Album> YEAR = Comparator
+        .comparingInt(Album::getYear);
 
-    // ====== Artist name sorting ======
+    public static final Comparator<Album> ALBUM_NAME = Comparator
+        .comparing(Album::getAlbumName);
 
-    // ====== Year sorting ======
+    public static final Comparator<Album> ALBUM_NAME_LENGTH = Comparator
+        .comparingInt(album -> album.getAlbumName().length());
 
-    public static final Comparator<Album> Year = new Comparator<Album>() {
-        @Override
-        public int compare(Album a1, Album a2) {
-            return Integer.compare(a1.year, a2.year);
-        }
-    };
+    public static final Comparator<Album> ALBUM_DURATION = Comparator
+        .comparing(Album::getAlbumDuration);
 
-    // ====== Year sorting ======
+    // public static final Comparator<Album> Artist = new Comparator<Album>() {
+    //     @Override
+    //     public int compare(Album a1, Album a2) {
+    //         if (a1.artist.equals(a2.artist)) {
+    //             return Integer.compare(a1.year, a2.year);
+    //         }
+    //         return a1.artist.compareTo(a2.artist);
+    //     }
+    // };
 
-    // ====== Album sorting ======
+    // public static final Comparator<Album> ArtistLength = new Comparator<Album>() {
+    //     @Override
+    //     public int compare(Album a1, Album a2) {
+    //         return Integer.compare(a1.artist.length(), a2.artist.length());
+    //     }
+    // };
 
-    public static final Comparator<Album> AlbumName = new Comparator<Album>() {
-        @Override
-        public int compare(Album a1, Album a2) {
-            return a1.albumName.compareTo(a2.albumName);
-        }
-    };
+    // // ====== Artist name sorting ======
 
-    public static final Comparator<Album> AlbumNameLength = new Comparator<Album>() {
-        @Override
-        public int compare(Album a1, Album a2) {
-            return Integer.compare(a1.albumName.length(), a2.albumName.length());
-        }
-    };
+    // // ====== Year sorting ======
 
-    public static final Comparator<Album> AlbumDuration = new Comparator<Album>() {
-        @Override
-        public int compare(Album a1, Album a2) {
-            return a1.getAlbumDuration().compareTo(a2.getAlbumDuration());
-        }
-    };
+    // public static final Comparator<Album> Year = new Comparator<Album>() {
+    //     @Override
+    //     public int compare(Album a1, Album a2) {
+    //         return Integer.compare(a1.year, a2.year);
+    //     }
+    // };
+
+    // // ====== Year sorting ======
+
+    // // ====== Album sorting ======
+
+    // public static final Comparator<Album> AlbumName = new Comparator<Album>() {
+    //     @Override
+    //     public int compare(Album a1, Album a2) {
+    //         return a1.albumName.compareTo(a2.albumName);
+    //     }
+    // };
+
+    // public static final Comparator<Album> AlbumNameLength = new Comparator<Album>() {
+    //     @Override
+    //     public int compare(Album a1, Album a2) {
+    //         return Integer.compare(a1.albumName.length(), a2.albumName.length());
+    //     }
+    // };
+
+    // public static final Comparator<Album> AlbumDuration = new Comparator<Album>() {
+    //     @Override
+    //     public int compare(Album a1, Album a2) {
+    //         return a1.getAlbumDuration().compareTo(a2.getAlbumDuration());
+    //     }
+    // };
 
     // ====== Album sorting ======
 

@@ -22,6 +22,8 @@ public class Duration implements Comparable<Duration> {
         hours = Integer.parseInt(timeParts[0]);
     }
 
+    public Duration() { this(new int[]{0, 0, 0}); }
+
     public Duration(int[] duration) {
         seconds = duration[0];
         minutes = duration[1];
@@ -32,7 +34,7 @@ public class Duration implements Comparable<Duration> {
 
     public int toSeconds() { return seconds + minutes * 60 + hours * 3600; }
 
-    public void addDuration(Duration d2) {
+    public void add(Duration d2) {
         this.seconds += d2.seconds;
         this.minutes += d2.minutes;
         this.hours += d2.hours;

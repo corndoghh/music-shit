@@ -4,21 +4,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AlbumCollection {
 
-    private Album[] albums = new Album[] {};
+    private List<Album> albums;
 
-    public AlbumCollection() {
-    }
+    
+    public AlbumCollection(List<Album> albums) { this.albums = albums; }
 
-    public AlbumCollection(Album[] albums) {
-        this.albums = albums;
-    }
-
+    public AlbumCollection() { this(new ArrayList<>()); }
+    
     public boolean loadFromFile(String filePath) {
         Scanner albumsFile;
         try {
@@ -59,20 +61,14 @@ public class AlbumCollection {
 
     }
 
-    public void appendAlbum(Album album) {
-        Album[] newAlbums = Arrays.copyOf(albums, albums.length + 1);
-        newAlbums[albums.length] = album;
-        albums = newAlbums;
-    }
+    public void appendAlbum(Album album) { albums.add(album); }
 
-    public Album[] getAlbums() {
-        return albums;
-    }
+    public List<Album> getAlbums() { return albums; }
 
     // ====== Album Sorting ======
 
     public void sort() {
-        sort(Album.Artist, false);
+        sort(Album.ARTIST, false);
     }
 
     public void sort(Comparator<Album> comparator) {
@@ -80,46 +76,43 @@ public class AlbumCollection {
     }
 
     public void sort(Comparator<Album> comparator, Boolean reversed) {
-        if (comparator == Album.AlbumNameLength || comparator == Album.ArtistLength) {
-            reversed = !reversed;
-        }
-        ArrayList<Album> sorted = new ArrayList<>(Arrays.asList(this.albums));
-        Collections.sort(sorted, comparator);
-        if (reversed) {
-            Collections.reverse(sorted);
-        }
-        albums = sorted.toArray(Album[]::new);
+        reversed = (comparator == Album.ALBUM_NAME_LENGTH || comparator == Album.ARTIST_LENGTH) ? !reversed : reversed;
+        albums.sort(comparator);
+        if (reversed) { Collections.reverse(albums); }
     }
 
     // ====== Album Sorting ======
 
     public Album getAlbumByIdentifier(String identifier) {
-        return getAlbumsByIdentifier(identifier).getAlbums()[0];
+        return getAlbumsByIdentifier(identifier).getAlbums().get(0);
     }
 
     public AlbumCollection getAlbumsByIdentifier(String identifier) {
-        Album[] filterdAlbums = Arrays.stream(albums).filter(x -> (x.getAlbumName().equals(identifier)
-                || x.getArtist().equals(identifier) || String.valueOf(x.getYear()).equals(identifier)))
-                .toArray(Album[]::new);
-
-        return new AlbumCollection(filterdAlbums);
+        Stream<Album> a = albums
+            .stream()
+            .filter(x -> (x.getAlbumName().equals(identifier) || x.getArtist().equals(identifier) || String.valueOf(x.getYear()).equals(identifier)));
+        
+        ArrayList<Album> b = (ArrayList<Album>) a.collect(Collectors.toList());
+        return new AlbumCollection(b);
+        // return new AlbumCollection(albums.stream().filter(x -> (x.getAlbumName().equals(identifier)
+        //         || x.getArtist().equals(identifier) || String.valueOf(x.getYear()).equals(identifier)))
+        //         .toArray(Album[]::new));
     }
 
-    public Duration[] getAlbumDurations() {
-        return Arrays.stream(getAlbums()).map(Album::getAlbumDuration).map(x -> {
-            return new Duration(new int[] { 0, 0, 0 }) {
-                {
-                    addDuration(x);
-                }
+    public List<Duration> getAlbumDurations() {
+        return getAlbums().stream().map(Album::getAlbumDuration).map(x -> {
+            return new Duration() {
+                { add(x); }
             };
-        }).toArray(Duration[]::new);
+        }).collect(Collectors.toList());
+        // return Arrays.stream(getAlbums()).map(Album::getAlbumDuration).map(x -> {
+        //     return new Duration(new int[] { 0, 0, 0 }) {
+        //         { add(x); }
+        //     };
+        // }).toArray(Duration[]::new);
     }
 
-    public Duration getTotalDuration() {
-        return Arrays.stream(getAlbumDurations()).reduce(new Duration(new int[] { 0, 0, 0 }), (x, i) -> {
-            x.addDuration(i);
-            return x;
-        });
+    public Duration getTotalDuration() { return getAlbumDurations().stream().reduce(new Duration(), (x, i) -> { x.add(i); return x; }); }
         // System.out.println(totalDuration);
 
         // return new Duration(new int[]{0,0,0});
@@ -138,8 +131,7 @@ public class AlbumCollection {
 
         // totalDuration[2] += totalDuration[1] / 60;
         // totalDuration[1] %= 60;
-        // return new Duration(totalDuration);
-    }
+        // return new Duration(totalDuration)
 
     @Override
     public String toString() {
