@@ -12,7 +12,7 @@ public class Album {
 
     public Album(String artist, String albumName, int year, List<Track> tracks) {
         this.artist = artist;
-        this.albumName = albumName != null ? albumName.stripTrailing() : null;
+        this.albumName = albumName;
         this.year = year;
         this.tracks = new ArrayList<>(tracks);
     }

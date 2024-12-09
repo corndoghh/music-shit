@@ -47,11 +47,10 @@ public class AlbumCollection {
                     if (album != null) {
                         this.appendAlbum(album);
                     }
-
                     album = new Album(
                             data.split(" : ")[0],
-                            data.split(" : ")[1].substring(0, year.start()),
-                            Integer.parseInt(year.group().split("\\(")[1].split("\\)")[0]));
+                            data.split(" : ")[1].substring(0, year.start()-1),
+                            Integer.parseInt(year.group().replaceAll("[()]","")));
                 }
 
             }
