@@ -9,10 +9,6 @@ public class Track extends Duration {
         this.title = title;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
     public static final Comparator<Track> TRACK_DURATION = Comparator.naturalOrder();
 
     @Override

@@ -1,12 +1,7 @@
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class AlbumCollection {
@@ -21,44 +16,7 @@ public class AlbumCollection {
         this(new ArrayList<>());
     }
 
-    public boolean loadFromFile(String filePath) {
-        Scanner albumsFile;
-        try {
-            albumsFile = new Scanner(new File(filePath));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        Album album = null;
-
-        while (albumsFile.hasNextLine()) {
-            String data = albumsFile.nextLine();
-
-            Matcher matcher = Pattern.compile("(?:[0-9]{1,2}):(?:[0-5][0-9]):(?:[0-5][0-9])").matcher(data);
-
-            if (matcher.find()) {
-                assert album != null : "Object should not be null";
-                Track track = new Track(data.split(" - ")[1], matcher.group());
-                album.appendTrack(track);
-            } else {
-                Matcher year = Pattern.compile("\\(\\d{4}\\)").matcher(data.split(" : ")[1]);
-                if (year.find()) {
-                    if (album != null) {
-                        this.appendAlbum(album);
-                    }
-                    album = new Album(
-                            data.split(" : ")[0],
-                            data.split(" : ")[1].substring(0, year.start()-1),
-                            Integer.parseInt(year.group().replaceAll("[()]","")));
-                }
-
-            }
-        }
-        albumsFile.close();
-        return true;
-
-    }
+ 
 
     public void appendAlbum(Album album) {
         albums.add(album);
